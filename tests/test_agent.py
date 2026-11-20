@@ -4,29 +4,32 @@ import httpx
 from anthropic import Anthropic
 from typer.testing import CliRunner
 
-from nitaqat_agent.agent import STEPS, run_agent
-from nitaqat_agent.cli import app
+from saudi_sme_agent.agent import STEPS, run_agent
+from saudi_sme_agent.cli import app
 
 
 def test_mock_cli_offline_in_arabic(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     result = CliRunner().invoke(
-        app, ["match", "--mock", "--lang", "ar", "--skills", "إكسل، SQL"]
+        app, ["guide", "--mock", "--lang", "ar", "--goal", "التمويل"]
     )
     assert result.exit_code == 0, result.output
     report = json.loads(result.output)
-    assert report["matches"][0]["role"] == "محلل بيانات مبتدئ"
-    assert report["recommendations"][0]["sdg_target"] == "8.5"
+    assert report["language"] == "ar"
+    assert [item["id"] for item in report["recommendations"]] == [
+        "financing-gate",
+        "kafalah",
+    ]
+    assert all(item["sdg_target"] == "9.3" for item in report["recommendations"])
 
 
-def test_claude_protocol_uses_grounded_actions_and_excludes_raw_labels():
+def test_claude_protocol_reorders_only_grounded_actions():
     calls = []
 
     def respond(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
         name = body["tool_choice"]["name"]
         calls.append(name)
-        assert "PRIVATE_LABEL" not in request.content.decode()
         if len(calls) > 1:
             assert (
                 body["messages"][-1]["content"][0]["tool_use_id"]
@@ -58,9 +61,9 @@ def test_claude_protocol_uses_grounded_actions_and_excludes_raw_labels():
     with Anthropic(
         api_key="test-placeholder", http_client=httpx.Client(transport=transport)
     ) as sdk:
-        report = run_agent(
-            ["Excel", "SQL", "PRIVATE_LABEL"], "en", mock=False, client=sdk
-        )
+        report = run_agent("financing", "en", mock=False, client=sdk)
     assert calls == list(STEPS)
-    assert report.unrecognized_count == 1
-    assert [action.sdg_target for action in report.recommendations] == ["4.4", "8.5"]
+    assert [action.id for action in report.recommendations] == [
+        "kafalah",
+        "financing-gate",
+    ]

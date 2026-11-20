@@ -1,24 +1,45 @@
 {
-  "source": "synthetic",
-  "skills": {
-    "excel": {"en": "Excel", "ar": "إكسل"},
-    "sql": {"en": "SQL", "ar": "إس كيو إل"},
-    "visualization": {"en": "data visualization", "ar": "تصور البيانات"},
-    "service": {"en": "customer service", "ar": "خدمة العملاء"},
-    "crm": {"en": "CRM", "ar": "إدارة علاقات العملاء"},
-    "reporting": {"en": "report writing", "ar": "كتابة التقارير"}
-  },
-  "roles": [
-    {"id": "data", "title": {"en": "Junior data analyst", "ar": "محلل بيانات مبتدئ"}, "required": ["excel", "sql", "visualization"]},
-    {"id": "support", "title": {"en": "Customer support associate", "ar": "موظف دعم العملاء"}, "required": ["service", "crm"]},
-    {"id": "operations", "title": {"en": "Operations assistant", "ar": "مساعد عمليات"}, "required": ["excel", "reporting"]}
-  ],
-  "practice": {
-    "excel": {"en": "Build a pivot table from a sample spreadsheet.", "ar": "أنشئ جدولاً محورياً من ملف بيانات تجريبي."},
-    "sql": {"en": "Practice SELECT, GROUP BY and JOIN on a sample database.", "ar": "تدرّب على SELECT وGROUP BY وJOIN باستخدام قاعدة بيانات تجريبية."},
-    "visualization": {"en": "Create a chart and explain the trend it shows.", "ar": "أنشئ رسماً بيانياً واشرح الاتجاه الذي يعرضه."},
-    "service": {"en": "Role-play resolving a customer complaint.", "ar": "حاكِ معالجة شكوى عميل."},
-    "crm": {"en": "Practice tracking customer requests in a demo CRM.", "ar": "تدرّب على تتبع طلبات العملاء في نظام تجريبي لإدارة العلاقات."},
-    "reporting": {"en": "Write a one-page weekly operations summary.", "ar": "اكتب ملخصاً أسبوعياً للعمليات في صفحة واحدة."}
-  }
+  "source": "curated_official_references",
+  "routes": [
+    {
+      "id": "registration",
+      "goal": "licensing",
+      "action": {"en": "Use the Saudi Business Center to find commercial registration services for your legal form and activity.", "ar": "ابحث في المركز السعودي للأعمال عن خدمات السجل التجاري المناسبة لشكل منشأتك القانوني ونشاطها."},
+      "confidence": {"en": "Official entry point. Verify the applicable registration requirements for your case.", "ar": "بوابة رسمية. تحقّق من متطلبات التسجيل المنطبقة على حالتك."},
+      "source_url": "https://business.sa/",
+      "sdg_target": "8.3"
+    },
+    {
+      "id": "municipal-requirements",
+      "goal": "licensing",
+      "action": {"en": "Look up activity and location requirements in Balady, including any listed approvals.", "ar": "ابحث في بلدي عن اشتراطات النشاط والموقع وأي موافقات مدرجة."},
+      "confidence": {"en": "Official activity lookup. Requirements depend on the selected activity and site.", "ar": "استعلام رسمي. تختلف الاشتراطات حسب النشاط والموقع."},
+      "source_url": "https://apps.balady.gov.sa/LicenseStandard/Default",
+      "sdg_target": "8.3"
+    },
+    {
+      "id": "municipal-license",
+      "goal": "licensing",
+      "action": {"en": "If the activity requires a municipal commercial license, review Balady's issuing guide and confirm which documents apply.", "ar": "إذا تطلّب نشاطك رخصة تجارية بلدية، راجع دليل الإصدار في بلدي وتحقّق من المستندات المطلوبة لحالتك."},
+      "confidence": {"en": "Official service guide. Applicability must be confirmed with the authority.", "ar": "دليل خدمة رسمي. تأكّد من انطباق الخدمة لدى الجهة المختصة."},
+      "source_url": "https://balady.gov.sa/en/services/11010/guide",
+      "sdg_target": "8.3"
+    },
+    {
+      "id": "financing-gate",
+      "goal": "financing",
+      "action": {"en": "Review Tamweel Gate to learn how SMEs submit requests to participating financiers.", "ar": "راجع بوابة التمويل لمعرفة كيفية إرسال المنشآت الصغيرة والمتوسطة طلباتها إلى الجهات التمويلية المشاركة."},
+      "confidence": {"en": "Official channel description. Confirm available offers and terms with the financier.", "ar": "وصف رسمي للقناة. تحقّق من العروض المتاحة وشروطها لدى الجهة التمويلية."},
+      "source_url": "https://www.kafalah.gov.sa/en/Help/Pages/TamweelGate.aspx",
+      "sdg_target": "9.3"
+    },
+    {
+      "id": "kafalah",
+      "goal": "financing",
+      "action": {"en": "Ask a participating financier about Kafalah. The program can provide a guarantee to the financier, which handles the financing request.", "ar": "اسأل جهة تمويلية مشاركة عن كفالة. يمكن للبرنامج تقديم ضمان للجهة التمويلية التي تدرس طلب التمويل."},
+      "confidence": {"en": "Official guarantee-program description. The financier and program assess requests independently.", "ar": "وصف رسمي لبرنامج الضمان. تدرس الجهة التمويلية والبرنامج الطلبات وفق إجراءات كل منهما."},
+      "source_url": "https://www.kafalah.gov.sa/en/Help/FAQ/Pages/Does-the-program-grant-financing-to-SMEs.aspx",
+      "sdg_target": "9.3"
+    }
+  ]
 }

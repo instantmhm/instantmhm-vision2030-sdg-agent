@@ -1,50 +1,51 @@
 from pathlib import Path
 
-from nitaqat_agent.tools import (
-    analyze_matches,
+from saudi_sme_agent.tools import (
+    build_checklist,
     generate_report,
     load_catalog,
-    recommend,
+    select_routes,
 )
 
 
 def test_catalog_matches_source():
     root = Path(__file__).resolve().parents[1]
     source = root / "data/sample/catalog.json"
-    packaged = root / "src/nitaqat_agent/data/catalog.json"
+    packaged = root / "src/saudi_sme_agent/data/catalog.json"
     assert source.read_bytes() == packaged.read_bytes()
-    assert load_catalog().source == "synthetic"
+    assert load_catalog().source == "curated_official_references"
 
 
-def test_match_ranking_and_arabic_parity():
+def test_each_goal_selects_relevant_routes():
     catalog = load_catalog()
-    en, en_gaps, en_unknown = analyze_matches(catalog, ["Excel", "SQL", "other"], "en")
-    ar, ar_gaps, ar_unknown = analyze_matches(
-        catalog, ["إِكسِل", "اس كيو ال", "آخر"], "ar"
-    )
-    assert [match.role for match in en] == [
-        "Junior data analyst",
-        "Operations assistant",
+    licensing = select_routes(catalog, "licensing")
+    financing = select_routes(catalog, "financing")
+    assert [route.id for route in licensing] == [
+        "registration",
+        "municipal-requirements",
+        "municipal-license",
     ]
-    assert ar[0].role == "محلل بيانات مبتدئ"
-    assert [match.coverage for match in en] == [2 / 3, 1 / 2]
-    assert [match.coverage for match in ar] == [match.coverage for match in en]
-    assert en_gaps == ar_gaps == ["visualization"]
-    assert en_unknown == ar_unknown == 1
+    assert [route.id for route in financing] == ["financing-gate", "kafalah"]
+    assert select_routes(catalog, "both") == licensing + financing
 
 
-def test_recommendations_have_tags_and_confidence():
-    catalog = load_catalog()
-    matches, gaps, _ = analyze_matches(catalog, ["Excel", "SQL"], "en")
-    actions = recommend(catalog, matches, gaps, "en")
-    assert [action.sdg_target for action in actions] == ["8.5", "4.4"]
-    assert all(action.confidence for action in actions)
-    assert recommend(catalog, [], [], "ar")[0].sdg_target == "8.6"
+def test_checklist_language_parity_and_provenance():
+    routes = select_routes(load_catalog(), "both")
+    en = build_checklist(routes, "en")
+    ar = build_checklist(routes, "ar")
+    assert [(item.id, item.source_url, item.sdg_target) for item in en] == [
+        (item.id, item.source_url, item.sdg_target) for item in ar
+    ]
+    assert all(
+        item.source_url.scheme == "https" and item.confidence for item in en + ar
+    )
+    assert en[0].action != ar[0].action
+    assert "guarantee to the financier" in en[-1].action
 
 
-def test_report_keeps_catalog_provenance():
-    recommendations = recommend(load_catalog(), [], [], "en")
-    report = generate_report([], recommendations, 1, "en")
-    assert report.data_source == "synthetic"
-    assert report.recommendations == recommendations
-    assert report.unrecognized_count == 1
+def test_report_uses_validated_checklist():
+    actions = build_checklist(select_routes(load_catalog(), "financing"), "ar")
+    report = generate_report("financing", "ar", actions)
+    assert report.goal == "financing"
+    assert report.language == "ar"
+    assert report.recommendations == actions

@@ -8,19 +8,26 @@ from anthropic import Anthropic
 from anthropic.types import MessageParam, ToolParam, ToolUseBlock
 from pydantic import BaseModel, ConfigDict, Field
 
-from nitaqat_agent.models import Catalog, Language, Match, Recommendation, Report
-from nitaqat_agent.prompts import SYSTEM
-from nitaqat_agent.tools import (
-    analyze_matches,
+from saudi_sme_agent.models import (
+    Catalog,
+    Goal,
+    Language,
+    Recommendation,
+    Report,
+    Route,
+)
+from saudi_sme_agent.prompts import SYSTEM
+from saudi_sme_agent.tools import (
+    build_checklist,
     generate_report,
     load_catalog,
-    recommend,
+    select_routes,
 )
 
 STEPS = {
-    "load_catalog": "Load the illustrative catalog and its provenance.",
-    "analyze_matches": "Compute role coverage and missing skills locally.",
-    "recommend": "Prepare catalog-grounded counselor and practice actions.",
+    "load_catalog": "Load the official-source catalog.",
+    "select_routes": "Filter routes for the chosen goal.",
+    "build_checklist": "Build bilingual, source-linked actions.",
     "generate_report": "Choose the first action and assemble the structured report.",
 }
 
@@ -45,55 +52,39 @@ def tool_definition(name: str) -> ToolParam:
 
 @dataclass
 class Session:
-    labels: list[str]
+    goal: Goal
     language: Language
     catalog: Catalog | None = None
-    matches: list[Match] = field(default_factory=list)
-    gaps: list[str] = field(default_factory=list)
-    unrecognized: int = 0
-    recommendations: list[Recommendation] = field(default_factory=list)
+    routes: list[Route] = field(default_factory=list)
+    checklist: list[Recommendation] = field(default_factory=list)
 
     def dispatch(self, name: str, arguments: Any) -> dict | list | Report:
-        """Execute one stage, retaining local state across tool calls."""
+        """Execute one stage and retain the catalog-backed evidence."""
         if name == "generate_report":
             index = ReportArguments.model_validate(arguments).first_action
-            if index >= len(self.recommendations):
-                raise ValueError(
-                    "Claude selected an action outside the recommendation list."
-                )
-            actions = self.recommendations.copy()
+            if index >= len(self.checklist):
+                raise ValueError("Selected action is outside the checklist.")
+            actions = self.checklist.copy()
             actions.insert(0, actions.pop(index))
-            return generate_report(
-                self.matches, actions, self.unrecognized, self.language
-            )
+            return generate_report(self.goal, self.language, actions)
 
         NoArguments.model_validate(arguments)
         if name == "load_catalog":
             self.catalog = load_catalog()
-            return {
-                "source": self.catalog.source,
-                "role_count": len(self.catalog.roles),
-            }
+            return {"source": self.catalog.source}
         if self.catalog is None:
-            raise RuntimeError("Load the catalog before analysis or recommendation.")
-        if name == "analyze_matches":
-            self.matches, self.gaps, self.unrecognized = analyze_matches(
-                self.catalog, self.labels, self.language
-            )
-            return {
-                "matches": [match.model_dump() for match in self.matches],
-                "unrecognized_count": self.unrecognized,
-            }
-        if name == "recommend":
-            self.recommendations = recommend(
-                self.catalog, self.matches, self.gaps, self.language
-            )
-            return [action.model_dump() for action in self.recommendations]
+            raise RuntimeError("Load the catalog before selecting routes.")
+        if name == "select_routes":
+            self.routes = select_routes(self.catalog, self.goal)
+            return {"route_ids": [route.id for route in self.routes]}
+        if name == "build_checklist":
+            self.checklist = build_checklist(self.routes, self.language)
+            return [action.model_dump(mode="json") for action in self.checklist]
         raise ValueError(f"Unknown tool: {name}")
 
 
 def run_agent(
-    labels: list[str],
+    goal: Goal,
     language: Language,
     *,
     mock: bool,
@@ -101,14 +92,14 @@ def run_agent(
     model: str = "claude-sonnet-4-6",
 ) -> Report:
     """Run all four stages and return only the tool-generated report."""
-    session = Session(labels=labels, language=language)
+    session = Session(goal=goal, language=language)
     if not mock and client is None:
         raise ValueError("A Claude client is required in live mode.")
 
     messages: list[MessageParam] = [
         {
             "role": "user",
-            "content": f"Prepare a career exploration report in {language}.",
+            "content": f"Prepare an SME report for {goal} in {language}.",
         }
     ]
     for name in STEPS:

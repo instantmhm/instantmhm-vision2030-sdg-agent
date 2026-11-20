@@ -8,9 +8,9 @@ import typer
 from anthropic import Anthropic, APIError
 from dotenv import load_dotenv
 
-from nitaqat_agent.agent import run_agent
+from saudi_sme_agent.agent import run_agent
 
-app = typer.Typer(help="Explore illustrative Saudi career paths from skill labels.")
+app = typer.Typer(help="Find official Saudi SME licensing and financing routes.")
 
 
 class OutputLanguage(str, Enum):
@@ -20,22 +20,42 @@ class OutputLanguage(str, Enum):
     arabic = "ar"
 
 
+class NavigationGoal(str, Enum):
+    """Supported checklist scopes."""
+
+    licensing = "licensing"
+    financing = "financing"
+    both = "both"
+
+
 @app.callback()
 def main() -> None:
-    """Bilingual job–skill matching for career exploration."""
+    """Bilingual Saudi SME navigation."""
 
 
 @app.command()
-def match(
-    skills: Annotated[
-        str, typer.Option(help="Comma-separated skill labels in Arabic or English.")
+def guide(
+    goal: Annotated[
+        str,
+        typer.Option(help="licensing / الترخيص, financing / التمويل, both / كلاهما"),
     ],
     language: Annotated[
         OutputLanguage, typer.Option("--lang")
     ] = OutputLanguage.english,
     mock: Annotated[bool, typer.Option(help="Run locally without API access.")] = False,
 ) -> None:
-    """Print a structured career exploration report as JSON."""
+    """Print a source-linked SME checklist as JSON."""
+    aliases = {"الترخيص": "licensing", "التمويل": "financing", "كلاهما": "both"}
+    normalized = goal.strip().casefold()
+    try:
+        selected_goal = NavigationGoal(aliases.get(normalized, normalized))
+    except ValueError as error:
+        message = (
+            "اختر الترخيص أو التمويل أو كلاهما."
+            if language == OutputLanguage.arabic
+            else "Choose licensing, financing, or both."
+        )
+        raise typer.BadParameter(message, param_hint="--goal") from error
     client = None
     model = "claude-sonnet-4-6"
     if not mock:
@@ -53,7 +73,7 @@ def match(
         client = Anthropic(api_key=api_key, timeout=30.0, max_retries=1)
     try:
         report = run_agent(
-            skills.replace("،", ",").split(","),
+            selected_goal.value,
             "ar" if language == OutputLanguage.arabic else "en",
             mock=mock,
             client=client,

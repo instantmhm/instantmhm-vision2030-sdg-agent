@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "vision2030-sdg-agent"
 version = "0.1.0"
-description = "Bilingual Saudi career exploration and skills matching under Nitaqat"
+description = "Bilingual Saudi SME licensing and financing navigation"
 requires-python = ">=3.11"
 dependencies = ["anthropic>=0.52,<1", "pydantic>=2.10,<3", "python-dotenv>=1,<2", "typer>=0.15,<1"]
 authors = [{name = "Dr. Muhammad Zulkifl Hasan"}]
@@ -15,10 +15,10 @@ license = "MIT"
 dev = ["pytest>=8,<10", "ruff>=0.11,<1"]
 
 [project.scripts]
-nitaqat-agent = "nitaqat_agent.cli:app"
+sme-agent = "saudi_sme_agent.cli:app"
 
 [tool.setuptools.package-data]
-nitaqat_agent = ["data/*.json"]
+saudi_sme_agent = ["data/*.json"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I"]
