@@ -27,8 +27,12 @@ def main() -> None:
 
 @app.command()
 def match(
-    skills: Annotated[str, typer.Option(help="Comma-separated skill labels in Arabic or English.")],
-    language: Annotated[OutputLanguage, typer.Option("--lang")] = OutputLanguage.english,
+    skills: Annotated[
+        str, typer.Option(help="Comma-separated skill labels in Arabic or English.")
+    ],
+    language: Annotated[
+        OutputLanguage, typer.Option("--lang")
+    ] = OutputLanguage.english,
     mock: Annotated[bool, typer.Option(help="Run locally without API access.")] = False,
 ) -> None:
     """Print a structured career exploration report as JSON."""

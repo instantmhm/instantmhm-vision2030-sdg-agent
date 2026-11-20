@@ -10,7 +10,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from nitaqat_agent.models import Catalog, Language, Match, Recommendation, Report
 from nitaqat_agent.prompts import SYSTEM
-from nitaqat_agent.tools import analyze_matches, generate_report, load_catalog, recommend
+from nitaqat_agent.tools import (
+    analyze_matches,
+    generate_report,
+    load_catalog,
+    recommend,
+)
 
 STEPS = {
     "load_catalog": "Load the illustrative catalog and its provenance.",
@@ -25,13 +30,17 @@ class NoArguments(BaseModel):
 
 
 class ReportArguments(NoArguments):
-    first_action: int = Field(ge=0, description="Zero-based index from the recommendations.")
+    first_action: int = Field(
+        ge=0, description="Zero-based index from the recommendations."
+    )
 
 
 def tool_definition(name: str) -> ToolParam:
     """Expose the schema for one stage."""
     arguments = ReportArguments if name == "generate_report" else NoArguments
-    return ToolParam(name=name, description=STEPS[name], input_schema=arguments.model_json_schema())
+    return ToolParam(
+        name=name, description=STEPS[name], input_schema=arguments.model_json_schema()
+    )
 
 
 @dataclass
@@ -49,15 +58,22 @@ class Session:
         if name == "generate_report":
             index = ReportArguments.model_validate(arguments).first_action
             if index >= len(self.recommendations):
-                raise ValueError("Claude selected an action outside the recommendation list.")
+                raise ValueError(
+                    "Claude selected an action outside the recommendation list."
+                )
             actions = self.recommendations.copy()
             actions.insert(0, actions.pop(index))
-            return generate_report(self.matches, actions, self.unrecognized, self.language)
+            return generate_report(
+                self.matches, actions, self.unrecognized, self.language
+            )
 
         NoArguments.model_validate(arguments)
         if name == "load_catalog":
             self.catalog = load_catalog()
-            return {"source": self.catalog.source, "role_count": len(self.catalog.roles)}
+            return {
+                "source": self.catalog.source,
+                "role_count": len(self.catalog.roles),
+            }
         if self.catalog is None:
             raise RuntimeError("Load the catalog before analysis or recommendation.")
         if name == "analyze_matches":
@@ -69,7 +85,9 @@ class Session:
                 "unrecognized_count": self.unrecognized,
             }
         if name == "recommend":
-            self.recommendations = recommend(self.catalog, self.matches, self.gaps, self.language)
+            self.recommendations = recommend(
+                self.catalog, self.matches, self.gaps, self.language
+            )
             return [action.model_dump() for action in self.recommendations]
         raise ValueError(f"Unknown tool: {name}")
 
@@ -88,12 +106,17 @@ def run_agent(
         raise ValueError("A Claude client is required in live mode.")
 
     messages: list[MessageParam] = [
-        {"role": "user", "content": f"Prepare a career exploration report in {language}."}
+        {
+            "role": "user",
+            "content": f"Prepare a career exploration report in {language}.",
+        }
     ]
     for name in STEPS:
         if mock:
             arguments = {"first_action": 0} if name == "generate_report" else {}
-            call = ToolUseBlock(type="tool_use", id=f"mock_{name}", name=name, input=arguments)
+            call = ToolUseBlock(
+                type="tool_use", id=f"mock_{name}", name=name, input=arguments
+            )
         else:
             assert client is not None
             response = client.messages.create(
@@ -102,10 +125,20 @@ def run_agent(
                 system=SYSTEM,
                 messages=messages,
                 tools=[tool_definition(name)],
-                tool_choice={"type": "tool", "name": name, "disable_parallel_tool_use": True},
+                tool_choice={
+                    "type": "tool",
+                    "name": name,
+                    "disable_parallel_tool_use": True,
+                },
             )
-            calls = [block for block in response.content if isinstance(block, ToolUseBlock)]
-            if response.stop_reason != "tool_use" or len(calls) != 1 or calls[0].name != name:
+            calls = [
+                block for block in response.content if isinstance(block, ToolUseBlock)
+            ]
+            if (
+                response.stop_reason != "tool_use"
+                or len(calls) != 1
+                or calls[0].name != name
+            ):
                 raise ValueError(f"Claude did not complete the {name} stage.")
             call = calls[0]
 
@@ -113,12 +146,19 @@ def run_agent(
         if isinstance(result, Report):
             return result
         if not mock:
-            messages.extend([
-                {"role": "assistant", "content": [call.model_dump()]},
-                {"role": "user", "content": [{
-                    "type": "tool_result",
-                    "tool_use_id": call.id,
-                    "content": json.dumps(result, ensure_ascii=False),
-                }]},
-            ])
+            messages.extend(
+                [
+                    {"role": "assistant", "content": [call.model_dump()]},
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "tool_result",
+                                "tool_use_id": call.id,
+                                "content": json.dumps(result, ensure_ascii=False),
+                            }
+                        ],
+                    },
+                ]
+            )
     raise RuntimeError("The report stage did not return a report.")

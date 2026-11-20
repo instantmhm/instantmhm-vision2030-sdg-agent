@@ -1,6 +1,11 @@
 from pathlib import Path
 
-from nitaqat_agent.tools import analyze_matches, generate_report, load_catalog, recommend
+from nitaqat_agent.tools import (
+    analyze_matches,
+    generate_report,
+    load_catalog,
+    recommend,
+)
 
 
 def test_catalog_matches_source():
@@ -14,8 +19,13 @@ def test_catalog_matches_source():
 def test_match_ranking_and_arabic_parity():
     catalog = load_catalog()
     en, en_gaps, en_unknown = analyze_matches(catalog, ["Excel", "SQL", "other"], "en")
-    ar, ar_gaps, ar_unknown = analyze_matches(catalog, ["إِكسِل", "اس كيو ال", "آخر"], "ar")
-    assert [match.role for match in en] == ["Junior data analyst", "Operations assistant"]
+    ar, ar_gaps, ar_unknown = analyze_matches(
+        catalog, ["إِكسِل", "اس كيو ال", "آخر"], "ar"
+    )
+    assert [match.role for match in en] == [
+        "Junior data analyst",
+        "Operations assistant",
+    ]
     assert ar[0].role == "محلل بيانات مبتدئ"
     assert [match.coverage for match in en] == [2 / 3, 1 / 2]
     assert [match.coverage for match in ar] == [match.coverage for match in en]

@@ -76,15 +76,25 @@ def recommend(
         practice_note = "تمرين توضيحي مرتبط بفجوة مهارية في الكتالوج الاصطناعي."
     else:
         role_action = "Review the {} role and its requirements with a career counselor."
-        recovery = "Add skills from the sample catalog or review your skills with a counselor."
-        role_note = "Illustrative match based on self-reported skills and a synthetic catalog."
+        recovery = (
+            "Add skills from the sample catalog or review your skills with a counselor."
+        )
+        role_note = (
+            "Illustrative match based on self-reported skills and a synthetic catalog."
+        )
         recovery_note = "Insufficient matching evidence in the sample catalog."
-        practice_note = "Illustrative practice for a skill gap in the synthetic catalog."
+        practice_note = (
+            "Illustrative practice for a skill gap in the synthetic catalog."
+        )
     if not matches:
-        return [Recommendation(action=recovery, sdg_target="8.6", confidence=recovery_note)]
+        return [
+            Recommendation(action=recovery, sdg_target="8.6", confidence=recovery_note)
+        ]
     return [
         Recommendation(
-            action=role_action.format(matches[0].role), sdg_target="8.5", confidence=role_note
+            action=role_action.format(matches[0].role),
+            sdg_target="8.5",
+            confidence=role_note,
         ),
         *[
             Recommendation(
