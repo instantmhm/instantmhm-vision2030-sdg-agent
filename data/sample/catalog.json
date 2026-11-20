@@ -1,0 +1,24 @@
+{
+  "source": "synthetic",
+  "skills": {
+    "excel": {"en": "Excel", "ar": "إكسل"},
+    "sql": {"en": "SQL", "ar": "إس كيو إل"},
+    "visualization": {"en": "data visualization", "ar": "تصور البيانات"},
+    "service": {"en": "customer service", "ar": "خدمة العملاء"},
+    "crm": {"en": "CRM", "ar": "إدارة علاقات العملاء"},
+    "reporting": {"en": "report writing", "ar": "كتابة التقارير"}
+  },
+  "roles": [
+    {"id": "data", "title": {"en": "Junior data analyst", "ar": "محلل بيانات مبتدئ"}, "required": ["excel", "sql", "visualization"]},
+    {"id": "support", "title": {"en": "Customer support associate", "ar": "موظف دعم العملاء"}, "required": ["service", "crm"]},
+    {"id": "operations", "title": {"en": "Operations assistant", "ar": "مساعد عمليات"}, "required": ["excel", "reporting"]}
+  ],
+  "practice": {
+    "excel": {"en": "Build a pivot table from a sample spreadsheet.", "ar": "أنشئ جدولاً محورياً من ملف بيانات تجريبي."},
+    "sql": {"en": "Practice SELECT, GROUP BY and JOIN on a sample database.", "ar": "تدرّب على SELECT وGROUP BY وJOIN باستخدام قاعدة بيانات تجريبية."},
+    "visualization": {"en": "Create a chart and explain the trend it shows.", "ar": "أنشئ رسماً بيانياً واشرح الاتجاه الذي يعرضه."},
+    "service": {"en": "Role-play resolving a customer complaint.", "ar": "حاكِ معالجة شكوى عميل."},
+    "crm": {"en": "Practice tracking customer requests in a demo CRM.", "ar": "تدرّب على تتبع طلبات العملاء في نظام تجريبي لإدارة العلاقات."},
+    "reporting": {"en": "Write a one-page weekly operations summary.", "ar": "اكتب ملخصاً أسبوعياً للعمليات في صفحة واحدة."}
+  }
+}
